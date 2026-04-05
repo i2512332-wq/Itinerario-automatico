@@ -28,8 +28,8 @@ def ensure_backend_running():
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        # Breve espera para inicialización
-        time.sleep(2) 
+        # Espera para inicialización (Aumentado a 5s para el motor de navegador persistente)
+        time.sleep(5) 
         
         # --- PRE-CALENTAMIENTO DEL MOTOR PDF ---
         # Aseguramos que Playwright esté listo para que no tarde en el primer PDF

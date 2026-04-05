@@ -75,6 +75,58 @@ def ensure_playwright_installed():
     except Exception as e:
         print(f"Aviso en instalación de Playwright: {e}")
 
+async def generate_pdf_async(itinerary_data, browser_context, output_filename=OUTPUT_FILENAME):
+    """Generación de alta velocidad usando un contexto de navegador persistente."""
+    env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
+    template = env.get_template("report.html")
+    
+    # Cargar CSS
+    css_content = ""
+    if CSS_FILE.exists():
+        with open(CSS_FILE, 'r', encoding='utf-8') as f:
+            css_content = f.read()
+
+    # Procesar imágenes (Base64)
+    for key in ['logo_url', 'logo_cover_url', 'cover_url', 'llama_img', 'llama_purchase_img', 
+                'train_exp_img', 'train_vis_img', 'train_obs_img']:
+        if key in itinerary_data:
+            itinerary_data[key] = get_image_as_base64(itinerary_data[key])
+
+    global markdown
+    for day in itinerary_data.get('days', []):
+        day['images'] = [get_image_as_base64(img) for img in day.get('images', [])]
+        if markdown and day.get('descripcion'):
+            day['descripcion'] = markdown.markdown(str(day['descripcion']), extensions=['nl2br', 'sane_lists'])
+
+    html_content = template.render(**itinerary_data)
+    
+    output_path = BASE_DIR / output_filename
+    
+    # --- PROCESAMIENTO DIRECTO CON PLAYWRIGHT ---
+    page = await browser_context.new_page()
+    try:
+        await page.set_content(html_content, wait_until='load', timeout=60000)
+        
+        # Inyectar CSS
+        await page.add_style_tag(content=css_content)
+        extra_css = ".service-icon, .service-icon svg { width: 35px !important; height: 35px !important; } .pin-icon { width: 45px !important; height: 45px !important; }"
+        await page.add_style_tag(content=extra_css)
+        
+        # Pequeña espera para renderizado de fuentes/iconos
+        import asyncio
+        await asyncio.sleep(1)
+        
+        await page.pdf(
+            path=str(output_path),
+            format='A4',
+            print_background=True,
+            margin={'top': '0', 'right': '0', 'bottom': '0', 'left': '0'},
+            prefer_css_page_size=True
+        )
+        return str(output_path)
+    finally:
+        await page.close()
+
 def generate_pdf(itinerary_data, output_filename=OUTPUT_FILENAME):
     # Asegurar entorno Playwright
     ensure_playwright_installed()

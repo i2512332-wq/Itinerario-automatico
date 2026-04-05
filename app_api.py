@@ -1,18 +1,54 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
+from contextlib import asynccontextmanager
+from playwright.async_api import async_playwright
+import asyncio
 import math
 import os
 import re
 import uuid
 from datetime import datetime, timedelta
-from utils.pdf_generator import generate_pdf
-from utils.translator import translate_itinerary # Import original logic
+from utils.pdf_generator import generate_pdf_async, ensure_playwright_installed
+from utils.translator import translate_itinerary
 
-app = FastAPI(title="Athena Logic Engine (FastAPI)")
+# --- GESTIÓN DE NAVEGADOR PERSISTENTE ---
+class BrowserManager:
+    def __init__(self):
+        self.playwright = None
+        self.browser = None
+        self.context = None
+
+    async def start(self):
+        if not self.browser:
+            print("🚀 Iniciando Motor de Navegador Persistente...")
+            # Asegurar binarios en el arranque
+            ensure_playwright_installed()
+            self.playwright = await async_playwright().start()
+            self.browser = await self.playwright.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+            )
+            self.context = await self.browser.new_context()
+            print("✅ Motor de Navegador Listo.")
+
+    async def stop(self):
+        if self.browser:
+            await self.browser.close()
+            await self.playwright.stop()
+            print("🛑 Motor de Navegador Cerrado.")
+
+browser_mgr = BrowserManager()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await browser_mgr.start()
+    yield
+    await browser_mgr.stop()
+
+app = FastAPI(title="Athena Logic Engine (FastAPI)", lifespan=lifespan)
 
 # --- MODELOS DE DATOS ---
-
 class TourItemForPricing(BaseModel):
     id: str
     titulo: str
@@ -29,7 +65,7 @@ class TourItemForPricing(BaseModel):
     margen_individual: float = 30.0
 
 class PricingRequest(BaseModel):
-    itinerario: List[Dict[str, Any]] # Flexible input
+    itinerario: List[Dict[str, Any]]
     pax_counts: Dict[str, int]
     margen_pct: float
     margen_antes_pct: float
@@ -42,6 +78,17 @@ class TranslateRequest(BaseModel):
     target_lang: str
 
 # --- ENDPOINTS ---
+
+@app.post("/generate-pdf")
+async def api_generate_pdf(data: dict):
+    try:
+        if not browser_mgr.context:
+            await browser_mgr.start()
+        pdf_path = await generate_pdf_async(data, browser_mgr.context)
+        return {"status": "success", "pdf_path": pdf_path}
+    except Exception as e:
+        print(f"Error en Generación de PDF: {e}")
+        raise HTTPException(status_code=500, detail=f"Error PDF: {str(e)}")
 
 @app.post("/pricing")
 async def calculate_pricing(req: PricingRequest):
