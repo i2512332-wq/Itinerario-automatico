@@ -1487,6 +1487,16 @@ def render_ventas_ui():
                             ]
                         }
 
+                        # Estructura de Guía del Viajero (Recomendaciones y Equipaje)
+                        guia_viajero_pdf = {
+                            "secciones": [
+                                {"nombre": labels_pdf.get("recomendaciones_titulo", "RECOMENDACIONES"), "lista": [item.strip() for item in recomendacion_salud.split('\n') if item.strip()]}
+                            ],
+                            "secciones_extra": [
+                                {"nombre": labels_pdf.get("equipaje_titulo", "EQUIPAJE"), "lista": [item.strip() for item in recomendacion_ropa.split('\n') if item.strip()]}
+                            ]
+                        }
+
                         full_itinerary_data = {
                             'title_1': t1,
                             'title_2': t2,
@@ -1494,6 +1504,7 @@ def render_ventas_ui():
                             'fechas': rango_fechas.upper(),
                             'usa_fechas': usa_fechas,
                             'origen': tipo_t,
+                            'es_nacional': (pasajeros_nac > 0),
                             'simbolo_moneda': sym_target,
                             'duracion': f"{len(st.session_state.itinerario)}D / {num_noches}N",
                             'vendedor': st.session_state.get('v_nombre', 'Vendedor'),
@@ -1506,6 +1517,7 @@ def render_ventas_ui():
                             'notas_finales': notas_a_procesar,
                             'labels': labels_pdf,
                             'politicas': politicas_base,
+                            'guia_viajero': guia_viajero_pdf,
                             'header_img': "assets/img/logos/header_pdf.png",
                             'header_img': "assets/img/logos/header_pdf.png",
                             'logo_url': os.path.abspath(os.path.join("assets", "images", "logo_background.png")),
