@@ -55,7 +55,6 @@ def load_css():
 load_css()
 
 # --- GESTIÓN DE COOKIES (PERSISTENCIA REFORZADA) ---
-@st.cache_resource
 def get_manager():
     return nsc.CookieManager()
 
