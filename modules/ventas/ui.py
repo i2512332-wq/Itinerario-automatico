@@ -148,6 +148,19 @@ def crear_dia_base(titulo="Día Personalizado", desc="", servicios=None, icons=N
 # --- UI PRINCIPAL ---
 def render_ventas_ui():
     """Renderiza la interfaz de ventas"""
+    
+    # Helper para conversión de moneda (PEN/USD)
+    def convert_val(monto, is_already_usd):
+        # Tomar TC del session state o default 3.75
+        tc_local = st.session_state.get('f_tc', 3.75)
+        moneda_target = st.session_state.get('f_moneda_pdf', 'Mix')
+        
+        if moneda_target == "USD":
+            return monto if is_already_usd else (monto / tc_local if tc_local > 0 else 0)
+        elif moneda_target == "PEN":
+            return (monto * tc_local) if is_already_usd else monto
+        return monto
+
     image_folders = get_image_folders_ventas()
     
     # Esconder elementos de Streamlit (Header, Menu, Footer)
@@ -1147,15 +1160,16 @@ def render_ventas_ui():
                     avg_can_antes_pp = api_res["avg_can_antes_pp"]
                     total_nac_a_pp = api_res["total_nac_a_pp"]
                     
-                    # --- FUNCIÓN DE CONVERSIÓN ---
-                    def convert_val(monto, is_already_usd):
-                        moneda_pdf = st.session_state.get('f_moneda_pdf', 'Mix')
-                        if moneda_pdf == "USD":
-                            return monto if is_already_usd else (monto / tc if tc > 0 else 0)
-                        elif moneda_pdf == "PEN":
-                            return (monto * tc) if is_already_usd else monto
-                        return monto
-
+                    # --- VALORES RECUPERADOS ---
+                    real_nac = api_res["real_nac"]
+                    real_ext = api_res["real_ext"]
+                    real_can = api_res["real_can"]
+                    
+                    # Totales para compatibilidad
+                    total_nac_pp = api_res["total_nac_pp"]
+                    total_ext_pp = api_res["total_ext_pp"]
+                    total_can_pp = api_res["total_can_pp"]
+                    
                     det_nac = api_res["det_nac"]
                     det_ext = api_res["det_ext"]
                     det_can = api_res["det_can"]
