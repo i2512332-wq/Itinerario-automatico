@@ -1361,27 +1361,55 @@ def render_ventas_ui():
                         if not os.path.exists(cover_img):
                             cover_img = fallback_cover
                         
-                        # --- TRADUCCIÓN OPTIMIZADA (VIA FASTAPI) ---
+                        # --- PROCESAMIENTO DE TEXTOS Y ETIQUETAS ---
+                        labels_pdf = {
+                            "preparado_para": "PREPARADO PARA", "dia_label": "DÍA", "inicia_label": "INICIA:",
+                            "servicios_incluye": "SERVICIOS QUE INCLUYE:", "servicios_no_incluye": "SERVICIOS QUE NO INCLUYE:",
+                            "categorias": {"ADULTO": "ADULTO", "NIÑO": "NIÑO", "ESTUDIANTE": "ESTUDIANTE", "PcD": "PcD"},
+                            "cada_uno": "c/u", "confirmacion_titulo": "CONFIRMACIÓN FINAL",
+                            "confirmacion_subtitulo": "DOCUMENTO DE CIERRE DE RESERVA", "total_acordado": "TOTAL ACORDADO",
+                            "monto_final_cierre": "Monto Final de Cierre", "desglose_pasajero": "Desglose por Pasajero",
+                            "inversion_persona": "Inversión por persona:", "observaciones": "Observaciones:",
+                            "nota_inversion": "Nota sobre la inversión:", "propuesta_inversion": "Propuesta de Inversión",
+                            "seleccione_nivel": "Seleccione su nivel de experiencia", "experiencia_label": "EXPERIENCIA",
+                            "mas_elegido": "MÁS ELEGIDO", "garantia_titulo": "GARANTÍA DE RESERVA",
+                            "garantia_texto": "Confirmación con el 50% del total. El saldo se cancela al llegar a Cusco.",
+                            "oferta_lanzamiento": "OFERTA DE LANZAMIENTO", "tarifas_preferenciales": "TARIFAS PREFERENCIALES",
+                            "super_precio": "¡SÚPER PRECIO!", "tarifa_nacional": "TARIFA NACIONAL",
+                            "tarifa_internacional": "TARIFA INTERNACIONAL / CAN", "total_por_pasajero": "TOTAL POR PASAJERO",
+                            "extranjero_label": "Extranjero", "can_label": "Comunidad Andina (CAN)",
+                            "disponibilidad_titulo": "DISPONIBILIDAD", "disponibilidad_texto": "Sujeto a cambios según espacios.",
+                            "validez_titulo": "VALIDEZ", "validez_texto": "Válido por 48 horas.", "nota_experto": "Nota del Experto:",
+                            "terminos_titulo": "Términos y Condiciones", "terminos_subtitulo": "RESUMEN DE POLÍTICAS",
+                            "terminos_disclaimer": "Al confirmar, acepta los términos descritos.",
+                            "guia_titulo": "Guía del Viajero", "guia_subtitulo": "PREPARA TU AVENTURA",
+                            "recomendaciones_titulo": "RECOMENDACIONES", "equipaje_titulo": "EQUIPAJE",
+                            "mensaje_final_1": "¡Prepárate para vivir una experiencia inolvidable!",
+                            "mensaje_final_2": "Nos vemos pronto en Cusco.", "notas_adicionales": "Notas Adicionales:"
+                        }
+
                         itinerario_a_procesar = st.session_state.itinerario
                         notas_a_procesar = st.session_state.get('f_notas_finales', '')
-                        
+
                         if idioma_pdf != "Español":
                             target_lang = idioma_pdf
-                            with st.status("Traduciendo itinerario...", expanded=True) as status:
+                            with st.status(f"Traduciendo a {target_lang}...", expanded=False) as status:
                                 try:
                                     translate_req = {
-                                        "itinerario": st.session_state.itinerario,
-                                        "notas_finales": st.session_state.get('f_notas_finales', ''),
+                                        "itinerario": {"days": itinerario_a_procesar}, 
+                                        "notas_finales": notas_a_procesar,
                                         "target_lang": target_lang
                                     }
                                     res_tr = requests.post("http://127.0.0.1:8000/translate", json=translate_req, timeout=60)
                                     if res_tr.status_code == 200:
                                         translated_data = res_tr.json()
-                                        itinerario_a_procesar = translated_data['itinerario']
+                                        itinerario_a_procesar = translated_data['days']
                                         notas_a_procesar = translated_data['notas_finales']
+                                        if 'labels' in translated_data:
+                                            labels_pdf = translated_data['labels']
                                         st.success("¡Traducción completada!")
                                     else:
-                                        st.error("Error en el Motor de Traducción (FastAPI).")
+                                        st.error(f"Error en Traducción: {res_tr.text}")
                                         st.stop()
                                 except Exception as e:
                                     st.error(f"Error llamando a la API de Traducción: {e}")
@@ -1416,7 +1444,7 @@ def render_ventas_ui():
                         
                         # Data para PDF
                         num_noches = st.session_state.get('f_num_noches', len(st.session_state.itinerario))
-                        
+
                         full_itinerary_data = {
                             'title_1': t1,
                             'title_2': t2,
@@ -1435,6 +1463,7 @@ def render_ventas_ui():
                                 {"label": "CAN", "total": f"{avg_can_pp:,.2f}", "detalles": det_can} if pasajeros_can > 0 else None
                             ],
                             'notas_finales': notas_a_procesar,
+                            'labels': labels_pdf, # <-- FIX: Mandamos las etiquetas
                             'header_img': "assets/img/logos/header_pdf.png",
                             'logo_url': os.path.abspath(os.path.join("assets", "images", "logo_background.png")),
                             'logo_cover_url': os.path.abspath(os.path.join("assets", "images", "logo_background.png")),
