@@ -1,0 +1,11 @@
+streamlit
+jinja2
+playwright
+supabase
+python-dotenv
+markdown
+extra-streamlit-components
+openai
+fastapi
+uvicorn
+requests

@@ -1,0 +1,30 @@
+# Archivos Temporales de Itinerario
+*.pdf
+temp_*.html
+temp_*.py
+temp_*.json
+itinerarios/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+itinerario/
+itinerario_v2/
+
+# Streamlit/Secrets
+.env
+.streamlit/secrets.toml
+secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Imágenes (NO IGNORAR)
+!*.png
+!*.jpg
+!*.jpeg
+!*.webp
+!assets/

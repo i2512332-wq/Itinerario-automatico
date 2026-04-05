@@ -1,0 +1,66 @@
+/* Estilos personalizados para la aplicación Streamlit */
+.main {
+    background-color: #f8f9fa;
+}
+
+.stButton>button {
+    background-color: #00d1cc;
+    color: white;
+    border-radius: 8px;
+    border: none;
+    padding: 10px 24px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.stButton>button:hover {
+    background-color: #449e98;
+    border: none;
+    color: white;
+}
+
+.package-card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid #00d1cc;
+    margin-bottom: 20px;
+}
+
+h1,
+h2,
+h3 {
+    color: #2d3436;
+}
+
+/* Estilo para los botoncitos de control */
+div[data-testid="column"]>div>div>div[data-testid="stHorizontalBlock"]:has(div[data-testid="column"]:nth-child(3)) button {
+    background-color: transparent !important;
+    border: 1px solid #e0e0e0 !important;
+    color: #00d1cc !important;
+    padding: 0px !important;
+    height: 32px !important;
+    width: 32px !important;
+    font-size: 14px !important;
+    min-height: unset !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+div[data-testid="column"]>div>div>div[data-testid="stHorizontalBlock"]:has(div[data-testid="column"]:nth-child(3)) button:hover {
+    background-color: #f0f0f0 !important;
+    border-color: #00d1cc !important;
+}
+
+/* El botón de borrar */
+div[data-testid="column"]>div>div>div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child(3) button {
+    color: #ff7675 !important;
+}
+
+/* BOTONES GRANDES */
+.stButton>button {
+    width: 100% !important;
+    height: auto !important;
+}
