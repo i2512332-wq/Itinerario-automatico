@@ -28,7 +28,19 @@ def ensure_backend_running():
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        time.sleep(2) # Breve espera para inicialización
+        # Breve espera para inicialización
+        time.sleep(2) 
+        
+        # --- PRE-CALENTAMIENTO DEL MOTOR PDF ---
+        # Aseguramos que Playwright esté listo para que no tarde en el primer PDF
+        try:
+            from utils.pdf_generator import ensure_playwright_installed
+            with st.status("Inicializando Motor de Impresión PDF...", expanded=False) as status:
+                ensure_playwright_installed()
+                status.update(label="🚀 Motor PDF listo", state="complete")
+        except:
+            pass # No bloqueamos la app si falla el warmup
+            
     except Exception as e:
         st.error(f"Error crítico al arrancar el Motor de Lógica: {e}")
 

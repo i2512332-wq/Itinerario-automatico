@@ -1456,8 +1456,8 @@ def render_ventas_ui():
                                 if it_id:
                                     st.toast(f"✅ Sincronizado (ID: {it_id})")
                                 
-                                # 2. Generar PDF via API
-                                res_pdf = requests.post("http://127.0.0.1:8000/generate-pdf", json=full_itinerary_data, timeout=30)
+                                # 2. Generar PDF via API (Con timeout extendido a 120s para la nube)
+                                res_pdf = requests.post("http://127.0.0.1:8000/generate-pdf", json=full_itinerary_data, timeout=120)
                                 if res_pdf.status_code == 200:
                                     pdf_path = res_pdf.json()["pdf_path"]
                                     with open(pdf_path, "rb") as f:
@@ -1468,7 +1468,8 @@ def render_ventas_ui():
                                             mime="application/pdf"
                                         )
                                 else:
-                                    st.error("Error en el Motor de PDF (FastAPI).")
+                                    err_detail = res_pdf.json().get('detail', 'Error Desconocido')
+                                    st.error(f"Error en el Motor de PDF (FastAPI): {err_detail}")
                             except Exception as e:
                                 st.error(f"Error final: {e}")
                 else:
