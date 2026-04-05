@@ -1518,9 +1518,7 @@ def render_ventas_ui():
                             'cover_url': os.path.abspath(cover_img)
                         }
 
-                        # Limpiar nulos
-                        full_itinerary_data['precios_cierre'] = [p for p in full_itinerary_data['precios_cierre'] if p]
-
+                        # Limpiar nulos (Si fuera necesario para el nuevo formato de diccionario, se haría aquí, pero no es vital)
                         with st.spinner("Generando y Sincronizando..."):
                             try:
                                 # 1. Guardar en Supabase
