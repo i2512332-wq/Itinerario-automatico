@@ -1459,6 +1459,34 @@ def render_ventas_ui():
                         # Data para PDF
                         num_noches = st.session_state.get('f_num_noches', len(st.session_state.itinerario))
 
+                        # --- DATA PARA EL PDF (JINJA2) ---
+                        # Precios Actuales
+                        precios_pdf = {
+                            'nac': {'total': f"{avg_nac_pp:,.2f}", 'lista_det': det_nac} if pasajeros_nac > 0 else None,
+                            'ext': {'total': f"{avg_ext_pp:,.2f}", 'lista_det': det_ext} if pasajeros_ext > 0 else None,
+                            'can': {'total': f"{avg_can_pp:,.2f}", 'lista_det': det_can} if pasajeros_can > 0 else None
+                        }
+                        
+                        # Precios Antes (Oferta)
+                        precios_antes_pdf = {
+                            'nac': {'total': f"{avg_nac_antes_pp:,.2f}"} if avg_nac_antes_pp > 0 else None,
+                            'ext': {'total': f"{avg_ext_antes_pp:,.2f}"} if avg_ext_antes_pp > 0 else None,
+                            'can': {'total': f"{avg_can_antes_pp:,.2f}"} if avg_can_antes_pp > 0 else None
+                        }
+
+                        # Estructura de Políticas (Por defecto)
+                        politicas_base = {
+                            "titulo_principal": "RESUMEN DE TÉRMINOS Y CONDICIONES",
+                            "secciones": [
+                                {"titulo": "1. Reservas y Pagos", "icon": "💳", "contenido": "Se requiere el 50% para confirmar."},
+                                {"titulo": "2. Anulaciones", "icon": "🕒", "contenido": "Gastos administrativos aplican si se anula con menos de 15 días."},
+                                {"titulo": "3. Condiciones", "icon": "📋", "contenido": "Es obligatorio DNI/Pasaporte vigente."},
+                                {"titulo": "4. Visita", "icon": "🏛️", "contenido": "Boletos válidos para un solo ingreso."},
+                                {"titulo": "5. Responsabilidades", "icon": "🛡️", "contenido": "La agencia no responde por retrasos externos."},
+                                {"titulo": "6. Atención", "icon": "📱", "contenido": "Atención virtual vía WhatsApp/Email."}
+                            ]
+                        }
+
                         full_itinerary_data = {
                             'title_1': t1,
                             'title_2': t2,
@@ -1466,18 +1494,19 @@ def render_ventas_ui():
                             'fechas': rango_fechas.upper(),
                             'usa_fechas': usa_fechas,
                             'origen': tipo_t,
-                            'simbolo_moneda': mode_curr,
+                            'simbolo_moneda': sym_target,
                             'duracion': f"{len(st.session_state.itinerario)}D / {num_noches}N",
                             'vendedor': st.session_state.get('v_nombre', 'Vendedor'),
                             'celular_cliente': st.session_state.f_celular,
                             'days': days_data,
-                            'precios_cierre': [
-                                {"label": "NACIONAL", "total": f"{avg_nac_pp:,.2f}", "detalles": det_nac} if pasajeros_nac > 0 else None,
-                                {"label": "EXTRANJERO", "total": f"{avg_ext_pp:,.2f}", "detalles": det_ext} if pasajeros_ext > 0 else None,
-                                {"label": "CAN", "total": f"{avg_can_pp:,.2f}", "detalles": det_can} if pasajeros_can > 0 else None
-                            ],
+                            'precios': precios_pdf,
+                            'precios_antes': precios_antes_pdf,
+                            'show_antes_pdf': True, 
+                            'nota_p': st.session_state.get('f_nota_precio', 'INCLUYE TOUR'),
                             'notas_finales': notas_a_procesar,
-                            'labels': labels_pdf, # <-- FIX: Mandamos las etiquetas
+                            'labels': labels_pdf,
+                            'politicas': politicas_base,
+                            'header_img': "assets/img/logos/header_pdf.png",
                             'header_img': "assets/img/logos/header_pdf.png",
                             'logo_url': os.path.abspath(os.path.join("assets", "images", "logo_background.png")),
                             'logo_cover_url': os.path.abspath(os.path.join("assets", "images", "logo_background.png")),
